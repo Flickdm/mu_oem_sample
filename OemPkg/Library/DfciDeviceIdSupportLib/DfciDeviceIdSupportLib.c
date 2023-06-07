@@ -221,14 +221,14 @@ DfciIdSupportGetSerialNumber (
     return EFI_INVALID_PARAMETER;
   }
 
-  SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;    // Reset handle
-  Type         = SMBIOS_TYPE_SYSTEM_ENCLOSURE; // Smbios type3
+  SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;      // Reset handle
+  Type         = SMBIOS_TYPE_SYSTEM_INFORMATION; // Smbios type1
   Status       = mSmbiosProtocol->GetNext (mSmbiosProtocol, &SmbiosHandle, &Type, &Record, NULL);
   if (!EFI_ERROR (Status)) {
-    Type3Record = (SMBIOS_TABLE_TYPE3 *)Record;
+    Type1Record = (SMBIOS_TABLE_TYPE1 *)Record;
   }
 
-  Status = GetOptionalStringByIndex ((CHAR8 *)((UINT8 *)Type3Record + Type3Record->Hdr.Length), Type3Record->SerialNumber, SerialNumber, SerialNumberSize);
+  Status = GetOptionalStringByIndex ((CHAR8 *)((UINT8 *)Type1Record + Type1Record->Hdr.Length), Type1Record->SerialNumber, SerialNumber, SerialNumberSize);
   return Status;
 }
 
