@@ -215,7 +215,7 @@ DfciIdSupportGetSerialNumber (
   EFI_SMBIOS_HANDLE        SmbiosHandle;
   EFI_SMBIOS_TABLE_HEADER  *Record;
   SMBIOS_TYPE              Type;
-  SMBIOS_TABLE_TYPE3       *Type3Record;
+  SMBIOS_TABLE_TYPE1       *Type1Record;
 
   if (SerialNumber == NULL) {
     return EFI_INVALID_PARAMETER;
