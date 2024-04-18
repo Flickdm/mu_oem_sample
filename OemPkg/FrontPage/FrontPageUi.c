@@ -623,13 +623,13 @@ UpdateSecureBootStatusStrings (
   )
 {
   BOOLEAN  IsEnabled;
-  UINTN    CurrentConfig;
   CHAR16   StateString[256];                // This is a somewhat arbitrary limit. Just needs to be large enough to encompass the largest possible string.
   CHAR16   *PreambleSubstring = NULL;
   CHAR16   *StateSubstring    = NULL;
   CHAR16   *ConfigSubstring   = NULL;
   CHAR16   *SuffixSubstring   = NULL;
-
+  EFI_STATUS Status;
+  SECURE_BOOT_CONFIG_INFO ConfigInfo;
   //
   // No matter what the mode is, we need the preamble.
   PreambleSubstring = (CHAR16 *)HiiGetString (mFrontPagePrivate.HiiHandle, STRING_TOKEN (STR_SEC_SB_STATE_PREAMBLE), NULL);
@@ -646,13 +646,13 @@ UpdateSecureBootStatusStrings (
     SuffixSubstring = (CHAR16 *)HiiGetString (mFrontPagePrivate.HiiHandle, STRING_TOKEN (STR_SEC_SB_KEY_CONFIG_TEXT), NULL);
 
     // Determine the ConfigSubstring.
-    CurrentConfig = GetCurrentSecureBootConfig ();
-    if (MU_SB_CONFIG_NONE == CurrentConfig) {
+    Status = GetCurrentSecureBootConfig (&ConfigInfo);
+    if (CONTAINS_NO_KEYS(ConfigInfo)) {
       ConfigSubstring = (CHAR16 *)HiiGetString (mFrontPagePrivate.HiiHandle, STRING_TOKEN (STR_GENERIC_TEXT_NONE), NULL);
-    } else if (mSecureBootKeysCount <= CurrentConfig) {
+    } else if (CONTAINS_UNKNOWN_KEYS(ConfigInfo)) {
       ConfigSubstring = (CHAR16 *)HiiGetString (mFrontPagePrivate.HiiHandle, STRING_TOKEN (STR_SEC_SB_CUSTOM_CONFIG_TEXT), NULL);
     } else {
-      ConfigSubstring = (CHAR16 *)mSecureBootKeys[CurrentConfig].SecureBootKeyName;
+      ConfigSubstring = GetSecureBootConfigString(ConfigInfo);
     }
 
     UnicodeSPrint (
