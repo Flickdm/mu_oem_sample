@@ -1,0 +1,41 @@
+## @file
+#  Simple Shared Library Reference Module.
+#
+#  Copyright (C) Microsoft Corporation. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SampleSharedLibApp
+  FILE_GUID                      = 403FF0A9-2DD7-47FF-A120-770BFB50125D
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = AppEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+
+[Sources]
+  SharedLoaderShim.c
+  SharedLoaderPeCoffLib.h
+  SharedLoaderPeCoffLib.c
+  Common/Common.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  DebugLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DxeServicesLib
+  PeCoffGetEntryPointLib
+  PeCoffLib
+
+[Protocols]
+  ## TODO Add protocols here

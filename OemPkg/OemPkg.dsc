@@ -85,7 +85,9 @@
 
   ConfigVariableListLib|SetupDataPkg/Library/ConfigVariableListLib/ConfigVariableListLib.inf
   ActiveProfileIndexSelectorLib|OemPkg/Library/ActiveProfileIndexSelectorPcdLib/ActiveProfileIndexSelectorPcdLib.inf
-
+  PeCoffLib|MdePkg/Library/BasePeCoffLib/BasePeCoffLib.inf
+  PeCoffExtraActionLib|MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
+  StackCheckFailureHookLib|MdePkg/Library/StackCheckFailureHookLibNull/StackCheckFailureHookLibNull.inf
 [LibraryClasses.IA32]
   MsUiThemeLib|MsGraphicsPkg/Library/MsUiThemeLib/Pei/MsUiThemeLib.inf
 
@@ -105,6 +107,14 @@
   MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
   ConfigKnobShimLib|SetupDataPkg/Library/ConfigKnobShimLib/ConfigKnobShimPeiLib/ConfigKnobShimPeiLib.inf
   PolicyLib|PolicyServicePkg/Library/PeiPolicyLib/PeiPolicyLib.inf
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLibStaticInit.inf
+
+[LibraryClasses.common.SEC, LibraryClasses.common.PEI_CORE]
+  NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+
+[LibraryClasses.common.MM_CORE_STANDALONE, LibraryClasses.common.MM_STANDALONE, LibraryClasses.common.DXE_CORE, LibraryClasses.common.SMM_CORE, LibraryClasses.common.DXE_SMM_DRIVER, LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.DXE_SAL_DRIVER, LibraryClasses.common.UEFI_DRIVER, LibraryClasses.common.UEFI_APPLICATION]
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLibDynamicInit.inf
+
 ###############################################################
 #
 # Components Section - list of the modules and components that will be processed by compilation
@@ -146,6 +156,14 @@
   }
   OemPkg/Library/ActiveProfileIndexSelectorPcdLib/ActiveProfileIndexSelectorPcdLib.inf
   OemPkg/HelloUefi/HelloUefi.inf
+
+  OemPkg/SharedLoader/SharedLoaderShimDxe.inf
+  OemPkg/SharedLoader/SharedLoaderShimApp.inf
+
+  #
+  # This `application` is really a library and cannot be called directly
+  #
+  OemPkg/SharedLoader/Common/Common.inf
 
 [Components.IA32]
   OemPkg/DeviceStatePei/DeviceStatePei.inf
