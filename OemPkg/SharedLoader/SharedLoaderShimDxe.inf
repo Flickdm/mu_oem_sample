@@ -27,6 +27,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -36,9 +37,12 @@
   DxeServicesLib
   PeCoffGetEntryPointLib
   PeCoffLib
+  CacheMaintenanceLib
+  DxeServicesTableLib
 
 [Protocols]
   ## TODO Add protocols here
+  gEfiMemoryAttributeProtocolGuid     ## CONSUMES
 
 [Depex]
   TRUE

@@ -9,32 +9,40 @@ HelloWorld (
   VOID
   )
 {
-  mImports.Print (L"Hello, World!\n");
+  mImports.Print (0x00000040, "Hello, World!\n");
 }
 
 COMMON_EXPORT_API
 EFI_STATUS
 EFIAPI
 LibConstructor (
-  IN IMPORTS   *Imports,
-  OUT EXPORTS  *Exports
+  IMPORTS *Imports
   )
 {
-  if ((Imports == NULL) || (Imports->Signature != IMPORT_SIGNATURE)) {
+  if (Imports == NULL || Imports->Signature != IMPORT_SIGNATURE) {
     return EFI_INVALID_PARAMETER;
   }
 
-  //
-  // Print function should be safe to call
-  //
-  if ((Exports == NULL) || (Exports->Signature != EXPORT_SIGNATURE)) {
-    Imports->Print (L"Exports is NULL or has an invalid signature\n");
+  if (Imports->Print == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
   mImports.Print = Imports->Print;
 
-  Exports->HelloWorld = HelloWorld;
+  mImports.Print (0x00000040, "LibConstructor calling back!\n");
+
+
+  //
+  // Print function should be safe to call
+  //
+  //if ((Exports == NULL) || (Exports->Signature != EXPORT_SIGNATURE)) {
+  //  Imports->Print (0x00000040, "Exports is NULL or has an invalid signature\n");
+  //  return EFI_INVALID_PARAMETER;
+  //}
+
+  // mImports.Print = Imports->Print;
+
+  // Exports->HelloWorld = HelloWorld;
 
   return EFI_SUCCESS;
 }

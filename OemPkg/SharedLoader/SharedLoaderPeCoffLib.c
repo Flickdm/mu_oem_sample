@@ -11,7 +11,8 @@
 #include "Uefi.h"
 #include <Library/DebugLib.h>
 #include <Library/PeCoffGetEntryPointLib.h>
-
+#include <Library/BaseLib.h>
+#include <Library/BaseMemoryLib.h>
 #include "SharedLoaderPeCoffLib.h"
 
 // https://github.com/tianocore/edk2/blob/670e263419eb875fd8dce0c8d18dd3ab02b83ba0/PrmPkg/Library/DxePrmModuleDiscoveryLib/DxePrmModuleDiscoveryLib.c#L270
@@ -121,5 +122,100 @@ GetExportDirectoryInPeCoffImage (
 
   *ImageExportDirectory = ExportDirectory;
 
+  return EFI_SUCCESS;
+}
+
+VOID
+PrintExportedFunctions (
+  IN VOID                        *Image,
+  IN EFI_IMAGE_EXPORT_DIRECTORY  *ExportDirectory
+  )
+{
+  UINT32  *AddressOfNames;
+  CHAR8   *FunctionName;
+  UINT32  Index;
+
+  if ((Image == NULL) || (ExportDirectory == NULL)) {
+    DEBUG ((DEBUG_ERROR, "%a: Invalid parameter.\n", __FUNCTION__));
+    return;
+  }
+
+  AddressOfNames = (UINT32 *)((UINTN)Image + ExportDirectory->AddressOfNames);
+
+  DEBUG ((DEBUG_INFO, "Exported Functions:\n"));
+  for (Index = 0; Index < ExportDirectory->NumberOfNames; Index++) {
+    FunctionName = (CHAR8 *)((UINTN)Image + AddressOfNames[Index]);
+    DEBUG ((DEBUG_INFO, "  %a\n", FunctionName));
+  }
+}
+
+EFI_STATUS
+FindExportedFunction (
+  IN  VOID                        *Image,
+  IN  EFI_IMAGE_EXPORT_DIRECTORY  *ExportDirectory,
+  IN  CHAR8                       *FunctionName,
+  OUT UINT32                      *FunctionAddress
+  )
+{
+  UINT32  *AddressOfNames;
+  UINT16  *AddressOfNameOrdinals;
+  UINT32  *AddressOfFunctions;
+  CHAR8   *CurrentFunctionName;
+  UINT32  Index;
+
+  if ((Image == NULL) || (ExportDirectory == NULL) || (FunctionName == NULL) || (FunctionAddress == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  AddressOfNames = (UINT32 *)((UINTN)Image + ExportDirectory->AddressOfNames);
+  AddressOfNameOrdinals = (UINT16 *)((UINTN)Image + ExportDirectory->AddressOfNameOrdinals);
+  AddressOfFunctions = (UINT32 *)((UINTN)Image + ExportDirectory->AddressOfFunctions);
+
+  for (Index = 0; Index < ExportDirectory->NumberOfNames; Index++) {
+    CurrentFunctionName = (CHAR8 *)((UINTN)Image + AddressOfNames[Index]);
+    if (AsciiStrCmp(CurrentFunctionName, FunctionName) == 0) {
+      *FunctionAddress = AddressOfFunctions[AddressOfNameOrdinals[Index]];
+      return EFI_SUCCESS;
+    }
+  }
+
+  return EFI_NOT_FOUND;
+}
+
+EFI_STATUS
+GetFunctionAddress (
+  IN  VOID   *Image,
+  IN  CHAR8  *FunctionName,
+  OUT VOID   **FunctionAddress
+  )
+{
+  EFI_STATUS                    Status;
+  PE_COFF_LOADER_IMAGE_CONTEXT  ImageContext;
+  EFI_IMAGE_EXPORT_DIRECTORY    *ExportDirectory;
+  UINT32                        FunctionRva;
+
+  if ((Image == NULL) || (FunctionName == NULL) || (FunctionAddress == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  ZeroMem(&ImageContext, sizeof(ImageContext));
+  ImageContext.ImageAddress = (EFI_PHYSICAL_ADDRESS)(UINTN)Image;
+
+  Status = PeCoffLoaderGetImageInfo(&ImageContext);
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  Status = GetExportDirectoryInPeCoffImage(Image, &ImageContext, &ExportDirectory);
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  Status = FindExportedFunction(Image, ExportDirectory, FunctionName, &FunctionRva);
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  *FunctionAddress = (VOID *)((UINTN)Image + FunctionRva);
   return EFI_SUCCESS;
 }

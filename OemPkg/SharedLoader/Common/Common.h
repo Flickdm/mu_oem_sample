@@ -8,11 +8,11 @@
 #define IMPORT_VERSION  {0x0, 0x1, 0x0, 0x0}
 #define EXPORT_VERSION  {0x0, 0x1, 0x0, 0x0}
 
-typedef VOID (EFIAPI *PRINT_FUNCTION)(IN CHAR16 *Format, ...);
+typedef VOID (EFIAPI *PRINT_FUNCTION)(IN UINTN ErrorLevel, IN CHAR8 *Format, ...);
 
 #define VERSION
 
-
+#define CONSTRUCTOR_NAME  "LibConstructor"
 
 typedef struct _IMPORTS {
   UINT32            Signature;
@@ -32,10 +32,11 @@ typedef struct _EXPORTS {
   #define COMMON_EXPORT_API
 #endif
 
+typedef EFI_STATUS (EFIAPI *LIB_CONSTRUCTOR)(IMPORTS *Imports);
+
 COMMON_EXPORT_API
 EFI_STATUS
 EFIAPI
 LibConstructor (
-  IN IMPORTS   *Imports,
-  OUT EXPORTS  *Exports
+    IMPORTS *Imports
   );

@@ -158,7 +158,6 @@
   OemPkg/HelloUefi/HelloUefi.inf
 
   OemPkg/SharedLoader/SharedLoaderShimDxe.inf
-  OemPkg/SharedLoader/SharedLoaderShimApp.inf
 
   #
   # This `application` is really a library and cannot be called directly
