@@ -23,7 +23,7 @@
   SharedLoaderShim.c
   SharedLoaderPeCoffLib.h
   SharedLoaderPeCoffLib.c
-  Common/Common.h
+  HelloUefiLib/SharedDependencies.h
 
 [Packages]
   MdePkg/MdePkg.dec

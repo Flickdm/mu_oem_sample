@@ -162,7 +162,7 @@
   #
   # This `application` is really a library and cannot be called directly
   #
-  OemPkg/SharedLoader/Common/Common.inf
+  OemPkg/SharedLoader/HelloUefiLib/HelloUefiLib.inf
 
 [Components.IA32]
   OemPkg/DeviceStatePei/DeviceStatePei.inf

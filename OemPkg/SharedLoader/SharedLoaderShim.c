@@ -12,20 +12,53 @@
 
 #include <Protocol/MemoryAttribute.h>
 
-#include "Common/Common.h"
+#include "HelloUefiLib/SharedDependencies.h"
 #include "SharedLoaderPeCoffLib.h"
 
 typedef struct _INTERNAL_IMAGE_CONTEXT {
+  //
+  // Size of the Image in Bytes
+  //
   UINTN                           Size;
+  //
+  // Number of Pages required
+  //
   UINTN                           NumberOfPages;
+  //
+  // The allocated memory base
+  // this may or may not align to the image start
+  //
   EFI_PHYSICAL_ADDRESS            PageBase;
+  //
+  // The image context required by PeCoff functions
+  //
   PE_COFF_LOADER_IMAGE_CONTEXT    Context;
 } INTERNAL_IMAGE_CONTEXT;
 
-typedef EFI_STATUS (EFIAPI *ENTRY_POINT)(
-  IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
-  );
+VOID
+SetupDependencies (
+  DEPENDENCIES  *Depends
+  )
+{
+  //
+  // First declare this structure is a Dependency structure
+  //
+  Depends->Signature = DEPENDS_SIGNATURE;
+
+  //
+  // Now we must agree on the version of the structure
+  //
+  Depends->Version = DEPENDS_VERSION;
+
+  //
+  // Start filling in the dependencies requested
+  //
+  Depends->DebugPrint = DebugPrint;
+
+  //
+  //
+  //
+}
 
 EFI_STATUS
 EFIAPI
@@ -37,21 +70,16 @@ LoaderEntryPoint (
   EFI_STATUS  Status;
   VOID        *SectionData;
   UINTN       SectionSize;
-  UINT32      RVA = 0;
+  UINT32      RVA;
+  EFI_GUID    CommonGuid = SHARED_FILE_GUID;
 
-  INTERNAL_IMAGE_CONTEXT  Image;
-
+  INTERNAL_IMAGE_CONTEXT         Image;
   EFI_IMAGE_EXPORT_DIRECTORY     *Exports;
   EFI_MEMORY_ATTRIBUTE_PROTOCOL  *MemoryAttribute;
-  LIB_CONSTRUCTOR  LibConstructor;
-
-  IMPORTS Imports;
-
-  Imports.Signature = IMPORT_SIGNATURE;
-  Imports.Print = DebugPrint;
+  CONSTRUCTOR                    Constructor;
+  DEPENDENCIES                   Depends;
 
   // First we must walk all the FV's and find the one that contains the shared library
-  EFI_GUID  CommonGuid = COMMON_GUID;
 
   Status = SystemTable->BootServices->LocateProtocol (&gEfiMemoryAttributeProtocolGuid, NULL, (VOID **)&MemoryAttribute);
   if (EFI_ERROR (Status)) {
@@ -68,7 +96,7 @@ LoaderEntryPoint (
   //
   // Print out the GUID of the shared library
   //
-  DEBUG ((DEBUG_INFO, "Searching for Shared library GUID: %g\n", &CommonGuid));
+  DEBUG ((DEBUG_INFO, "Searching for Shared library GUID: %g\n", CommonGuid));
 
   //
   // Get the section data from any FV that contains the shared library
@@ -160,7 +188,6 @@ LoaderEntryPoint (
     DEBUG ((DEBUG_INFO, "Memory Attributes: 0x%x\n", Attributes));
     DEBUG ((DEBUG_INFO, "XP Memory: %a\n", (Attributes & EFI_MEMORY_XP) ? "Yes" : "No"));
 
-
     Status = MemoryAttribute->ClearMemoryAttributes (
                                 MemoryAttribute,
                                 Image.PageBase,
@@ -172,7 +199,6 @@ LoaderEntryPoint (
       DEBUG ((DEBUG_ERROR, "Failed to clear EFI_MEMORY_XP (%r) \n", Status));
       ASSERT (FALSE);
     }
-
   } else {
     //
     // Try to use the DXE Services protocol to set the memory attributes
@@ -256,13 +282,15 @@ LoaderEntryPoint (
     goto Exit;
   }
 
+  SetupDependencies (&Depends);
+
   //
   // Setup the Library constructor function
   //
-  LibConstructor = (LIB_CONSTRUCTOR)((EFI_PHYSICAL_ADDRESS)Image.Context.ImageAddress + RVA);
+  Constructor = (CONSTRUCTOR)((EFI_PHYSICAL_ADDRESS)Image.Context.ImageAddress + RVA);
 
   InvalidateInstructionCacheRange ((VOID *)(UINTN)Image.Context.ImageAddress, (UINTN)Image.Context.ImageSize);
-  Status = LibConstructor (&Imports);
+  Status = Constructor (&Depends);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to call LibConstructor: %r\n", Status));
     goto Exit;

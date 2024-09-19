@@ -1,6 +1,6 @@
 /** @file
 
-  The PRM Module Discovery library provides functionality to discover PRM modules installed by platform firmware.
+  This library provides the implementation of the PE/COFF loader functions for the SharedLoader module.
 
   Copyright (c) Microsoft Corporation
   Copyright (c) 2020 - 2022, Intel Corporation. All rights reserved.<BR>
@@ -15,9 +15,20 @@
 #include <Library/BaseMemoryLib.h>
 #include "SharedLoaderPeCoffLib.h"
 
-// https://github.com/tianocore/edk2/blob/670e263419eb875fd8dce0c8d18dd3ab02b83ba0/PrmPkg/Library/DxePrmModuleDiscoveryLib/DxePrmModuleDiscoveryLib.c#L270
+/**
+  Get the Export Directory in a PE/COFF image.
 
+  This function retrieves the Export Directory in a PE/COFF image.
 
+  @param[in]  Image                     A pointer to the base address of the PE/COFF image.
+  @param[in]  PeCoffLoaderImageContext   A pointer to the PE_COFF_LOADER_IMAGE_CONTEXT structure.
+  @param[out] ImageExportDirectory      A pointer to the Export Directory structure.
+
+  @retval EFI_SUCCESS                    The Export Directory is found.
+  @retval EFI_INVALID_PARAMETER          A parameter is invalid.
+  @retval EFI_UNSUPPORTED                The image is not a valid PE/COFF image.
+  @retval EFI_NOT_FOUND                  The Export Directory is not found.
+**/
 EFI_STATUS
 GetExportDirectoryInPeCoffImage (
   IN  VOID                          *Image,
@@ -125,6 +136,14 @@ GetExportDirectoryInPeCoffImage (
   return EFI_SUCCESS;
 }
 
+/**
+  Print the exported functions in a PE/COFF image.
+
+  This function prints the exported functions in a PE/COFF image.
+
+  @param[in] Image              A pointer to the base address of the PE/COFF image.
+  @param[in] ExportDirectory    A pointer to the Export Directory structure.
+**/
 VOID
 PrintExportedFunctions (
   IN VOID                        *Image,
@@ -149,6 +168,20 @@ PrintExportedFunctions (
   }
 }
 
+/**
+  Find an exported function in a PE/COFF image.
+
+  This function finds an exported function in a PE/COFF image.
+
+  @param[in]  Image            A pointer to the base address of the PE/COFF image.
+  @param[in]  ExportDirectory  A pointer to the Export Directory structure.
+  @param[in]  FunctionName     A pointer to the function name.
+  @param[out] FunctionAddress  A pointer to the function address.
+
+  @retval EFI_SUCCESS           The function is found.
+  @retval EFI_INVALID_PARAMETER A parameter is invalid.
+  @retval EFI_NOT_FOUND         The function is not found.
+**/
 EFI_STATUS
 FindExportedFunction (
   IN  VOID                        *Image,
@@ -180,42 +213,4 @@ FindExportedFunction (
   }
 
   return EFI_NOT_FOUND;
-}
-
-EFI_STATUS
-GetFunctionAddress (
-  IN  VOID   *Image,
-  IN  CHAR8  *FunctionName,
-  OUT VOID   **FunctionAddress
-  )
-{
-  EFI_STATUS                    Status;
-  PE_COFF_LOADER_IMAGE_CONTEXT  ImageContext;
-  EFI_IMAGE_EXPORT_DIRECTORY    *ExportDirectory;
-  UINT32                        FunctionRva;
-
-  if ((Image == NULL) || (FunctionName == NULL) || (FunctionAddress == NULL)) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  ZeroMem(&ImageContext, sizeof(ImageContext));
-  ImageContext.ImageAddress = (EFI_PHYSICAL_ADDRESS)(UINTN)Image;
-
-  Status = PeCoffLoaderGetImageInfo(&ImageContext);
-  if (EFI_ERROR(Status)) {
-    return Status;
-  }
-
-  Status = GetExportDirectoryInPeCoffImage(Image, &ImageContext, &ExportDirectory);
-  if (EFI_ERROR(Status)) {
-    return Status;
-  }
-
-  Status = FindExportedFunction(Image, ExportDirectory, FunctionName, &FunctionRva);
-  if (EFI_ERROR(Status)) {
-    return Status;
-  }
-
-  *FunctionAddress = (VOID *)((UINTN)Image + FunctionRva);
-  return EFI_SUCCESS;
 }
