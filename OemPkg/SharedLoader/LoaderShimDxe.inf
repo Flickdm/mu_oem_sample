@@ -20,9 +20,13 @@
 #  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
 
 [Sources]
-  SharedLoaderShim.c
-  SharedLoaderPeCoffLib.h
-  SharedLoaderPeCoffLib.c
+  LoaderShimDxe.c
+  LoaderShim.h
+  LoaderShim.c
+  PeCoffLib.h
+  PeCoffLib.c
+  MemoryProtections.h
+  MemoryProtections.c
   HelloUefiLib/SharedDependencies.h
 
 [Packages]
@@ -39,6 +43,7 @@
   PeCoffLib
   CacheMaintenanceLib
   DxeServicesTableLib
+  UefiBootServicesTableLib
 
 [Protocols]
   ## TODO Add protocols here
