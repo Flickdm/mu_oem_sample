@@ -40,11 +40,3 @@
 [BuildOptions]
   MSFT:*_*_*_DLINK_FLAGS  = /DLL /SUBSYSTEM:CONSOLE /VERSION:1.0
   MSFT:*_*_*_GENFW_FLAGS = --keepoptionalheader
-
-  #MSFT:*_*_*_DLINK_FLAGS            == /out:"$(BIN_DIR)\$(BASE_NAME).dll" /base:0x10000000 /pdb:"$(BIN_DIR)\$(BASE_NAME).pdb"
-  #MSFT:*_*_*_CC_FLAGS                = /nologo /W4 /WX /Gy /c /D UNICODE /Od /Oy- /FIAutoGen.h /EHs-c- /GF /D _CRT_SECURE_NO_WARNINGS /D _CRT_SECURE_NO_DEPRECATE
-  #MSFT:*_*_*_PP_FLAGS               == /nologo /E /TC /FIAutoGen.h
-
-
-#  MSFT:*_VS2022_IA32_DLINK_FLAGS     = /LIBPATH:"%VCToolsInstallDir%lib\x86" /LIBPATH:"%UniversalCRTSdkDir%lib\%UCRTVersion%\ucrt\x86" /LIBPATH:"%WindowsSdkDir%lib\%WindowsSDKLibVersion%\um\x86" /NOLOGO /SUBSYSTEM:CONSOLE /NODEFAULTLIB /IGNORE:4086 /MAP /OPT:REF /DEBUG /MACHINE:I386 /LTCG Kernel32.lib MSVCRTD.lib vcruntimed.lib ucrtd.lib Gdi32.lib User32.lib Winmm.lib Advapi32.lib
-#  MSFT:*_VS2022_X64_DLINK_FLAGS      = /LIBPATH:"%VCToolsInstallDir%lib\x64" /LIBPATH:"%UniversalCRTSdkDir%lib\%UCRTVersion%\ucrt\x64" /LIBPATH:"%WindowsSdkDir%lib\%WindowsSDKLibVersion%\um\x64" /NOLOGO /SUBSYSTEM:CONSOLE /NODEFAULTLIB /IGNORE:4086 /MAP /OPT:REF /DEBUG /MACHINE:AMD64 /LTCG Kernel32.lib MSVCRTD.lib vcruntimed.lib ucrtd.lib Gdi32.lib User32.lib Winmm.lib Advapi32.lib
