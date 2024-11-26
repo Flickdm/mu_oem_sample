@@ -362,3 +362,144 @@ ConvertSectionToPage (
 
   return EFI_SUCCESS;
 }
+
+
+/**
+  Get the Import Directory in a PE/COFF image.
+
+  This function retrieves the Import Directory in a PE/COFF image.
+
+  @param[in]  Image                     A pointer to the base address of the PE/COFF image.
+  @param[out] ImageImportDirectory      A pointer to the Import Directory structure.
+
+  @retval EFI_SUCCESS                    The Import Directory is found.
+  @retval EFI_INVALID_PARAMETER          A parameter is invalid.
+  @retval EFI_UNSUPPORTED                The image is not a valid PE/COFF image.
+  @retval EFI_NOT_FOUND                  The Import Directory is not found.
+**/
+EFI_STATUS
+GetImportDirectoryInPeCoffImage (
+  IN  INTERNAL_IMAGE_CONTEXT      *Image,
+  OUT EFI_IMAGE_IMPORT_DESCRIPTOR **ImageImportDirectory
+  )
+{
+  UINT16                               Magic;
+  UINT32                               NumberOfRvaAndSizes;
+  EFI_IMAGE_OPTIONAL_HEADER_PTR_UNION  OptionalHeaderPtrUnion;
+  EFI_IMAGE_DATA_DIRECTORY             *DirectoryEntry;
+  EFI_IMAGE_IMPORT_DESCRIPTOR          *ImportDirectory;
+
+  if ((Image == NULL) || (ImageImportDirectory == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  DirectoryEntry  = NULL;
+  ImportDirectory = NULL;
+
+  switch (Image->Context.Machine) {
+    case EFI_IMAGE_MACHINE_IA32:
+      Magic = EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC;
+      break;
+    case EFI_IMAGE_MACHINE_X64:
+    case EFI_IMAGE_MACHINE_AARCH64:
+      Magic = EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC;
+      break;
+    default:
+      return EFI_UNSUPPORTED;
+  }
+
+  OptionalHeaderPtrUnion.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)((UINTN)Image->Context.ImageAddress + Image->Context.PeCoffHeaderOffset);
+
+  if (OptionalHeaderPtrUnion.Pe32->Signature != EFI_IMAGE_NT_SIGNATURE) {
+    return EFI_UNSUPPORTED;
+  }
+
+  if (Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    NumberOfRvaAndSizes = OptionalHeaderPtrUnion.Pe32->OptionalHeader.NumberOfRvaAndSizes;
+    DirectoryEntry      = (EFI_IMAGE_DATA_DIRECTORY *)&(OptionalHeaderPtrUnion.Pe32->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_IMPORT]);
+  } else if (OptionalHeaderPtrUnion.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    NumberOfRvaAndSizes = OptionalHeaderPtrUnion.Pe32Plus->OptionalHeader.NumberOfRvaAndSizes;
+    DirectoryEntry      = (EFI_IMAGE_DATA_DIRECTORY *)&(OptionalHeaderPtrUnion.Pe32Plus->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_IMPORT]);
+  } else {
+    return EFI_UNSUPPORTED;
+  }
+
+  if ((NumberOfRvaAndSizes <= EFI_IMAGE_DIRECTORY_ENTRY_IMPORT) || (DirectoryEntry->VirtualAddress == 0)) {
+    return EFI_NOT_FOUND;
+  } else if (((UINT32)(~0) - DirectoryEntry->VirtualAddress) < DirectoryEntry->Size) {
+    return EFI_UNSUPPORTED;
+  } else {
+    ImportDirectory = (EFI_IMAGE_IMPORT_DESCRIPTOR *)((UINTN)Image->Context.ImageAddress + DirectoryEntry->VirtualAddress);
+  }
+
+  *ImageImportDirectory = ImportDirectory;
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Set the Import Directory in a PE/COFF image.
+
+  This function sets the Import Directory in a PE/COFF image.
+
+  @param[in]  Image                     A pointer to the base address of the PE/COFF image.
+  @param[in]  ImageImportDirectory      A pointer to the Import Directory structure.
+
+  @retval EFI_SUCCESS                    The Import Directory is set.
+  @retval EFI_INVALID_PARAMETER          A parameter is invalid.
+  @retval EFI_UNSUPPORTED                The image is not a valid PE/COFF image.
+**/
+EFI_STATUS
+SetImportDirectoryInPeCoffImage (
+  IN  INTERNAL_IMAGE_CONTEXT      *Image,
+  IN  EFI_IMAGE_IMPORT_DESCRIPTOR *ImageImportDirectory
+  )
+{
+  UINT16                               Magic;
+  UINT32                               NumberOfRvaAndSizes;
+  EFI_IMAGE_OPTIONAL_HEADER_PTR_UNION  OptionalHeaderPtrUnion;
+  EFI_IMAGE_DATA_DIRECTORY             *DirectoryEntry;
+
+  if ((Image == NULL) || (ImageImportDirectory == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  DirectoryEntry = NULL;
+
+  switch (Image->Context.Machine) {
+    case EFI_IMAGE_MACHINE_IA32:
+      Magic = EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC;
+      break;
+    case EFI_IMAGE_MACHINE_X64:
+    case EFI_IMAGE_MACHINE_AARCH64:
+      Magic = EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC;
+      break;
+    default:
+      return EFI_UNSUPPORTED;
+  }
+
+  OptionalHeaderPtrUnion.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)((UINTN)Image->Context.ImageAddress + Image->Context.PeCoffHeaderOffset);
+
+  if (OptionalHeaderPtrUnion.Pe32->Signature != EFI_IMAGE_NT_SIGNATURE) {
+    return EFI_UNSUPPORTED;
+  }
+
+  if (Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    NumberOfRvaAndSizes = OptionalHeaderPtrUnion.Pe32->OptionalHeader.NumberOfRvaAndSizes;
+    DirectoryEntry      = (EFI_IMAGE_DATA_DIRECTORY *)&(OptionalHeaderPtrUnion.Pe32->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_IMPORT]);
+  } else if (OptionalHeaderPtrUnion.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    NumberOfRvaAndSizes = OptionalHeaderPtrUnion.Pe32Plus->OptionalHeader.NumberOfRvaAndSizes;
+    DirectoryEntry      = (EFI_IMAGE_DATA_DIRECTORY *)&(OptionalHeaderPtrUnion.Pe32Plus->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_IMPORT]);
+  } else {
+    return EFI_UNSUPPORTED;
+  }
+
+  if (NumberOfRvaAndSizes <= EFI_IMAGE_DIRECTORY_ENTRY_IMPORT) {
+    return EFI_UNSUPPORTED;
+  }
+
+  DirectoryEntry->VirtualAddress = (UINT32)((UINTN)ImageImportDirectory - (UINTN)Image->Context.ImageAddress);
+  DirectoryEntry->Size = sizeof(EFI_IMAGE_IMPORT_DESCRIPTOR);
+
+  return EFI_SUCCESS;
+}

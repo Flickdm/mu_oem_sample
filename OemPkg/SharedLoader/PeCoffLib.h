@@ -143,4 +143,23 @@ ConvertSectionToPage (
   OUT UINT32            *PageSize
   );
 
+/**
+  Get the Import Directory in a PE/COFF image.
+
+  This function retrieves the Import Directory in a PE/COFF image.
+
+  @param[in]  Image                     A pointer to the base address of the PE/COFF image.
+  @param[out] ImageImportDirectory      A pointer to the Import Directory structure.
+
+  @retval EFI_SUCCESS                    The Import Directory is found.
+  @retval EFI_INVALID_PARAMETER          A parameter is invalid.
+  @retval EFI_UNSUPPORTED                The image is not a valid PE/COFF image.
+  @retval EFI_NOT_FOUND                  The Import Directory is not found.
+**/
+EFI_STATUS
+GetImportDirectoryInPeCoffImage (
+  IN  INTERNAL_IMAGE_CONTEXT      *Image,
+  OUT EFI_IMAGE_IMPORT_DESCRIPTOR **ImageImportDirectory
+  );
+
 #endif // SHARED_LOADER_PE_COFF_LIB_H__

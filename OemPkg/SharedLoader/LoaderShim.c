@@ -182,6 +182,15 @@ LoaderEntryPoint (
 
   SetupDependencies (&Depends);
 
+  EFI_IMAGE_IMPORT_DESCRIPTOR *ImageImportDirectory;
+  Status = GetImportDirectoryInPeCoffImage(&Image, &ImageImportDirectory);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to get import directory: %r\n", Status));
+    goto Exit;
+  }
+
+  DUMP_HEX(DEBUG_ERROR, 0, ImageImportDirectory, sizeof(EFI_IMAGE_IMPORT_DESCRIPTOR), "");
+
   //
   // While we're setting up the Image,
   //
